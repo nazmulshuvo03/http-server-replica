@@ -1,22 +1,21 @@
-// Uncomment this block to pass the first stage
 use std::{
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
+    thread,
 };
 
 fn main() {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
 
-    // Uncomment this block to pass the first stage
-    //
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
 
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
                 println!("accepted new connection");
-                handle_connection(stream);
+                thread::spawn(|| {
+                    handle_connection(stream);
+                });
             }
             Err(e) => {
                 println!("error: {}", e);
@@ -45,7 +44,11 @@ fn handle_connection(mut stream: TcpStream) {
     let version = request_items[2];
     println!("Method: {}, path: {}, version: {}", method, path, version);
 
-    let user_agent = user_agent_items[1];
+    let user_agent = if user_agent_items.len() > 1 {
+        user_agent_items[1]
+    } else {
+        ""
+    };
     println!("User agent: {}", user_agent);
 
     let path_params: Vec<&str> = path.split('/').collect();
